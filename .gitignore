@@ -11,7 +11,7 @@ tmp/
 
 # wildcards
 *.class
-*.tmp
+*.tmp.nlogo
 *_managed/
 *~
 .#*

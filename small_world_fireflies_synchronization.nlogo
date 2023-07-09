@@ -11,12 +11,18 @@ globals [
   number-rewired                       ; number of edges that have been rewired
   rewire-one?                          ; these two variables record which button was last pushed
   rewire-all?
+
+  lower_bound                          ; upper bound of the cycle length
+  upper_bound                          ; lower bound of the cycle length
+
 ]
 
 turtles-own [
   clock
   threshold
   reset_threshold
+  cycle_length
+  nat_cycle_length
 
   distance-from-other-turtles ; list of distances of this node from other turtles
   my-clustering-coefficient   ; the current clustering coefficient of this node
