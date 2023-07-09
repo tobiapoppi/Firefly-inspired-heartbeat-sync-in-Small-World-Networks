@@ -18,11 +18,11 @@ globals [
 ]
 
 turtles-own [
-  clock
-  threshold
+  phase
   reset_threshold
   cycle_length
   nat_cycle_length
+  flash_length                   ; time duration of a flash
 
   distance-from-other-turtles ; list of distances of this node from other turtles
   my-clustering-coefficient   ; the current clustering coefficient of this node
@@ -48,14 +48,20 @@ to setup
   set number-rewired 0    ; initial count of rewired edges
   set highlight-string "" ; clear the highlight monitor
 
+
+  set lower_bound 85
+  set upper_bound 115
+
   ; make the nodes and arrange them in a circle in order by who number
   set-default-shape turtles "circle"
   create-turtles num-nodes [
     set color blue
-    set clock random (50)
-    set threshold 2
-    set reset_threshold threshold
-    ifelse num-nodes < 100 [ set size 1 ] [ set size 1 ]
+    set flash_length 2
+    set reset_threshold flash_length
+
+    set nat_cycle_length lower_bound + (random (upper_bound - lower_bound))
+    set cycle_length nat_cycle_length
+    set phase random (round cycle_length)
   ]
   layout-circle (sort turtles) max-pxcor - 1
 
@@ -77,6 +83,33 @@ end
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Main Procedures ;;
 ;;;;;;;;;;;;;;;;;;;;;
+
+
+to go
+  ask turtles[
+    inc_phase
+  ]
+
+end
+
+
+to inc_phase
+  set phase (phase + 1)
+  if phase = cycle_length [
+    set phase 0
+  ]
+end
+
+to update_color
+  ifelse (phase < flash_length)[
+    show-turtle
+    set color yellow
+  ]
+  [set color blue]
+
+end
+
+
 
 to rewire-one
   ; make sure num-turtles is setup correctly else run setup first
