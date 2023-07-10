@@ -1,6 +1,5 @@
 globals [
   infinity         ; used to represent the distance between two turtles with no path between them
-  highlight-string ; message that appears on the node properties monitor
 
   average-path-length-of-lattice       ; average path length of the initial lattice
   average-path-length                  ; average path length in the current network
@@ -15,11 +14,14 @@ globals [
   lower_bound                          ; upper bound of the cycle length
   upper_bound                          ; lower bound of the cycle length
 
+  silence_time                         ; time of silence elapsed (of nobody flashing)
+                                       ; default necessary silence in the paper for sync is 200ms
+  sync                                ; boolean value to tell if the network is synchronized
 ]
 
 turtles-own [
-  phase
-  reset_threshold
+  phase                          ; phase of a firefly ()
+  reset_level
   cycle_length
   nat_cycle_length
   flash_length                   ; time duration of a flash
@@ -36,18 +38,13 @@ links-own [
 ;; Setup Procedures ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
-to startup
-  set highlight-string ""
-end
-
 to setup
   clear-all
+  reset-ticks
 
   ; set the global variables
   set infinity 99999      ; this is an arbitrary choice for a large number
   set number-rewired 0    ; initial count of rewired edges
-  set highlight-string "" ; clear the highlight monitor
-
 
   set lower_bound 85
   set upper_bound 115
@@ -57,7 +54,7 @@ to setup
   create-turtles num-nodes [
     set color blue
     set flash_length 2
-    set reset_threshold flash_length
+    set reset_level flash_length
 
     set nat_cycle_length lower_bound + (random (upper_bound - lower_bound))
     set cycle_length nat_cycle_length
@@ -67,6 +64,7 @@ to setup
 
   ; Create the initial lattice
   wire-lattice
+
 
   ; Fix the color scheme
   ask turtles [ set color blue ]
@@ -78,6 +76,8 @@ to setup
 
   set average-path-length-of-lattice average-path-length
   set clustering-coefficient-of-lattice clustering-coefficient
+
+  wire-small-world
 end
 
 ;;;;;;;;;;;;;;;;;;;;;
@@ -86,10 +86,12 @@ end
 
 
 to go
+  check_sync
   ask turtles[
     inc_phase
+    update_color
   ]
-
+  tick
 end
 
 
@@ -97,6 +99,26 @@ to inc_phase
   set phase (phase + 1)
   if phase = cycle_length [
     set phase 0
+  ]
+  update_length
+end
+
+to update_length
+  if count link-neighbors with [color = yellow] >= neighbors_to_flash[
+    let g_plus 0   ; factor for lengthening the cycle
+    let g_minus 0  ; factor for shortening the cycle
+    let a (sin (360 * (phase / cycle_length))) / (2 * pi)
+    if a > 0 [set g_plus a]
+    if a < 0 [set g_minus a]
+
+    let om_l (1 / upper_bound)
+    let om_u (1 / lower_bound)
+    let om_nat (1 / nat_cycle_length)
+    let om_i (1 / cycle_length)
+    set om_i (om_i + (0.01 * (om_nat - om_i)) + (g_plus * (om_l - om_i)) - (g_minus * (om_u - om_i)))
+    set cycle_length round (1 / om_i)
+    if cycle_length < lower_bound [set cycle_length lower_bound]
+    if cycle_length > upper_bound [set cycle_length upper_bound]
   ]
 end
 
@@ -109,6 +131,21 @@ to update_color
 
 end
 
+to check_sync
+  if ticks > 300 [
+    ifelse count turtles with [color = yellow] = 0 [
+      set silence_time silence_time + 1
+    ]
+    [
+      ifelse silence_time > sync_silence_time [
+        set sync 1
+      ]
+      [
+        set silence_time 0
+      ]
+    ]
+  ]
+end
 
 
 to rewire-one
@@ -339,6 +376,34 @@ to wire-lattice
   ask link 1 (count turtles - 1) [ set shape "curve-a" ]
 end
 
+to wire-small-world
+  set rewiring-probability 0.1
+  set rewire-one? false
+  set rewire-all? true
+
+  let connected? false
+  while [ not connected? ] [
+    ask links [ die ]
+    wire-lattice
+    set number-rewired 0
+
+    ; ask each link to maybe rewire, according to the rewiring-probability slider
+    ask links [
+      if (random-float 1) < rewiring-probability [ rewire-me ]
+    ]
+
+    ; if the apl is infinity, it means our new network is not connected. Reset the lattice.
+    ifelse find-average-path-length = infinity [ set connected? false ] [ set connected? true ]
+    ifelse (find-clustering-coefficient > 0.2 and find-clustering-coefficient < 0.3) [set connected? true] [set connected? false]
+  ]
+
+  ; calculate the statistics and visualize the data
+  set clustering-coefficient find-clustering-coefficient
+  set average-path-length find-average-path-length
+  update-plots
+
+end
+
 ; Connects two nodes
 to make-edge [ node-A node-B the-shape ]
   ask node-A [
@@ -349,72 +414,18 @@ to make-edge [ node-A node-B the-shape ]
   ]
 end
 
-;;;;;;;;;;;;;;;;;;
-;; Highlighting ;;
-;;;;;;;;;;;;;;;;;;
-
-to highlight
-  ; remove any previous highlights
-  ask turtles [ set color gray + 2 ]
-  ask links   [ set color gray + 2 ]
-
-  ; if the mouse is in the View, go ahead and highlight
-  if mouse-inside? [ do-highlight ]
-
-  ; force updates since we don't use ticks
-  display
-end
-
-to do-highlight
-  ; getting the node closest to the mouse
-  let min-d min [ distancexy mouse-xcor mouse-ycor ] of turtles
-  let node one-of turtles with [count link-neighbors > 0 and distancexy mouse-xcor mouse-ycor = min-d]
-
-  if node != nobody [
-    ; highlight the chosen node
-    ask node [
-      set color white
-      let pairs (length remove infinity distance-from-other-turtles)
-      let my-apl (sum remove infinity distance-from-other-turtles) / pairs
-
-      ; show node's statistics
-      let coefficient-description ifelse-value my-clustering-coefficient = "undefined"
-        ["undefined for single-link"]
-        [precision my-clustering-coefficient 3]
-      set highlight-string (word "clustering coefficient = " coefficient-description
-        " and avg path length = " precision my-apl 3
-        " (for " pairs " turtles )")
-    ]
-
-    let neighbor-nodes [ link-neighbors ] of node
-    let direct-links [ my-links ] of node
-
-    ; highlight neighbors
-    ask neighbor-nodes [
-      set color orange
-      ; highlight edges connecting the chosen node to its neighbors
-      ask my-links [
-        ifelse (end1 = node or end2 = node)
-          [ set color orange ]
-          [ if (member? end1 neighbor-nodes and member? end2 neighbor-nodes) [ set color yellow ]
-        ]
-      ]
-    ]
-  ]
-end
-
 
 ; Copyright 2015 Uri Wilensky.
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-315
-45
-894
-625
+220
+10
+673
+464
 -1
 -1
-16.3143
+12.7143
 1
 10
 1
@@ -430,30 +441,30 @@ GRAPHICS-WINDOW
 17
 1
 1
-0
+1
 ticks
 30.0
 
 SLIDER
-50
-60
-240
-93
+10
+15
+200
+48
 num-nodes
 num-nodes
 10
 100
-77.0
+30.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-905
-445
-1170
-624
+705
+230
+970
+409
 Network Properties Rewire-One
 fraction of edges rewired
 NIL
@@ -469,10 +480,10 @@ PENS
 "cc" 1.0 2 -10899396 true "" ";; note: dividing by initial value to normalize the plot\nplotxy number-rewired / count links\n       clustering-coefficient / clustering-coefficient-of-lattice"
 
 BUTTON
-905
-410
-1170
-443
+705
+195
+970
+228
 NIL
 rewire-one
 NIL
@@ -486,25 +497,25 @@ NIL
 1
 
 SLIDER
-1175
-630
-1450
-663
+975
+415
+1250
+448
 rewiring-probability
 rewiring-probability
 0
 1
-0.81
+0.1
 0.01
 1
 NIL
 HORIZONTAL
 
 BUTTON
-1175
-410
-1450
-443
+975
+195
+1250
+228
 NIL
 rewire-all
 NIL
@@ -518,38 +529,10 @@ NIL
 1
 
 MONITOR
-900
-80
-1445
-125
-highlighted node properties
-highlight-string
-3
-1
-11
-
-BUTTON
-900
-45
-1445
-78
-NIL
-highlight
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-MONITOR
-55
-405
-195
-450
+15
+330
+155
+375
 clustering-coefficient (cc)
 clustering-coefficient
 3
@@ -557,10 +540,10 @@ clustering-coefficient
 11
 
 MONITOR
-55
-460
-195
-505
+15
+385
+155
+430
 average-path-length (apl)
 average-path-length
 3
@@ -568,10 +551,10 @@ average-path-length
 11
 
 PLOT
-1175
-445
-1450
-624
+975
+230
+1250
+409
 Network Properties Rewire-All
 rewiring probability
 NIL
@@ -587,10 +570,10 @@ PENS
 "cc" 1.0 2 -10899396 true "" ";; note: dividing by initial value to normalize the plot\nplotxy rewiring-probability\n       clustering-coefficient / clustering-coefficient-of-lattice"
 
 BUTTON
-50
-105
-125
-140
+10
+60
+85
+95
 setup
 setup
 NIL
@@ -604,24 +587,99 @@ NIL
 1
 
 TEXTBOX
-995
-630
-1200
-696
+795
+415
+1000
+481
 • - Clustering Coefficient\n
 14
 55.0
 1
 
 TEXTBOX
-995
-650
-1215
-681
+795
+435
+1015
+466
 • - Average Path Length
 14
 15.0
 1
+
+SLIDER
+10
+110
+182
+143
+neighbors_to_flash
+neighbors_to_flash
+1
+10
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+10
+165
+73
+198
+NIL
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+10
+205
+97
+238
+go forever
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+705
+20
+762
+65
+NIL
+sync
+17
+1
+11
+
+SLIDER
+15
+250
+187
+283
+sync_silence_time
+sync_silence_time
+0
+200
+80.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
