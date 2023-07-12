@@ -54,7 +54,7 @@ to setup
   ; make the nodes and arrange them in a circle in order by who number
   set-default-shape turtles "circle"
   create-turtles num-nodes [
-    set color blue
+    set color blue - 1
     set flash_length 2
     set reset_level flash_length
 
@@ -69,8 +69,8 @@ to setup
 
 
   ; Fix the color scheme
-  ask turtles [ set color blue ]
-  ask links [ set color blue - 1 ]
+  ask turtles [ set color blue - 1]
+  ask links [ set color grey ]
 
   ; Calculate the initial average path length and clustering coefficient
   set average-path-length find-average-path-length
@@ -106,7 +106,7 @@ to inc_phase
 end
 
 to update_length
-  if count link-neighbors with [color = yellow] >= neighbors_to_flash[
+  if count link-neighbors with [color = yellow or color = green - 0.5] >= neighbors_to_flash[
     let g_plus 0   ; factor for lengthening the cycle
     let g_minus 0  ; factor for shortening the cycle
     let a (sin (360 * (phase / cycle_length))) / (2 * pi)
@@ -127,15 +127,18 @@ end
 to update_color
   ifelse (phase < flash_length)[
     show-turtle
-    set color yellow
+    ifelse sync = 1 [
+      set color green - 0.5
+    ]
+    [set color yellow]
   ]
-  [set color blue]
+  [set color blue - 1]
 
 end
 
 to check_sync
   if ticks > 300 [
-    ifelse count turtles with [color = yellow] = 0 [
+    ifelse count turtles with [color = yellow or color = green - 0.5] = 0 [
       set silence_time silence_time + 1
     ]
     [
@@ -178,7 +181,7 @@ to rewire-me ; turtle procedure
     ; find a node distinct from A and not already a neighbor of "A"
     let node-B one-of turtles with [ (self != node-A) and (not link-neighbor? node-A) ]
     ; wire the new edge
-    ask node-A [ create-link-with node-B [ set color blue - 1 set rewired? true ] ]
+    ask node-A [ create-link-with node-B [ set color grey set rewired? true ] ]
 
     set number-rewired number-rewired + 1
     die ; remove the old edge
@@ -535,17 +538,17 @@ num-nodes
 num-nodes
 10
 100
-72.0
+37.0
 1
 1
 NIL
 HORIZONTAL
 
 MONITOR
-15
-330
-155
-375
+70
+360
+210
+405
 clustering-coefficient (cc)
 clustering-coefficient
 3
@@ -553,10 +556,10 @@ clustering-coefficient
 11
 
 MONITOR
-15
-385
-155
-430
+70
+415
+210
+460
 average-path-length (apl)
 average-path-length
 3
@@ -578,26 +581,6 @@ NIL
 NIL
 NIL
 NIL
-1
-
-TEXTBOX
-795
-415
-1000
-481
-• - Clustering Coefficient\n
-14
-55.0
-1
-
-TEXTBOX
-795
-435
-1015
-466
-• - Average Path Length
-14
-15.0
 1
 
 SLIDER
@@ -661,14 +644,14 @@ sync
 11
 
 SLIDER
-15
-250
-187
-283
+10
+265
+182
+298
 sync_silence_time
 sync_silence_time
-0
-200
+40
+100
 80.0
 1
 1
@@ -676,10 +659,10 @@ NIL
 HORIZONTAL
 
 PLOT
-10
-480
-820
-695
+690
+390
+1420
+605
 Flashing-nodes
 t
 #
@@ -691,14 +674,14 @@ true
 true
 "set-plot-y-range 0 num-nodes" ""
 PENS
-"# flashing-nodes" 1.0 0 -16382462 true "" "plot count turtles with [color = yellow]"
+"# flashing-nodes" 1.0 0 -16382462 true "" "plot count turtles with [color = yellow or color = green - 0.5]"
 "sync?" 1.0 0 -2674135 true "" "plot sync * (num-nodes / 2)"
 
 PLOT
-835
-460
-1610
-805
+690
+85
+1420
+380
 cycle_lengths
 NIL
 NIL
