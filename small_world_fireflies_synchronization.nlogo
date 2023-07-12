@@ -4,6 +4,8 @@ globals [
   average-path-length-of-lattice       ; average path length of the initial lattice
   average-path-length                  ; average path length in the current network
 
+  rewiring-probability
+
   clustering-coefficient-of-lattice    ; the clustering coefficient of the initial lattice
   clustering-coefficient               ; the clustering coefficient of the current network (avg. across nodes)
 
@@ -414,6 +416,85 @@ to make-edge [ node-A node-B the-shape ]
   ]
 end
 
+to appunti
+if ticks > 0 [ask turtle 0[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green - 1
+     plotxy ticks cycle_length
+]
+ask turtle 1[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green - 0.8
+     plotxy ticks cycle_length
+]
+ask turtle 2[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green - 0.6
+     plotxy ticks cycle_length
+]
+ask turtle 3[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green - 0.4
+     plotxy ticks cycle_length
+]
+ask turtle 4[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green - 0.2
+     plotxy ticks cycle_length
+]
+ask turtle 5[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green
+     plotxy ticks cycle_length
+]
+ask turtle 6[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green + 0.2
+     plotxy ticks cycle_length
+]
+ask turtle 7[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green + 0.4
+     plotxy ticks cycle_length
+]
+ask turtle 8[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green + 0.6
+     plotxy ticks cycle_length
+]
+ask turtle 9[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green + 0.8
+     plotxy ticks cycle_length
+]
+ask turtle 10[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green + 1
+     plotxy ticks cycle_length
+]
+ask turtle 11[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green + 1.2
+     plotxy ticks cycle_length
+]
+ask turtle 12[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green + 1.4
+     plotxy ticks cycle_length
+]
+ask turtle 13[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green + 1.6
+     plotxy ticks cycle_length
+]
+ask turtle 14[
+     create-temporary-plot-pen (word who)
+     set-plot-pen-color green + 1.8
+     plotxy ticks cycle_length
+]
+  ]
+end
+
 
 ; Copyright 2015 Uri Wilensky.
 ; See Info tab for full copyright and license.
@@ -454,79 +535,11 @@ num-nodes
 num-nodes
 10
 100
-30.0
+72.0
 1
 1
 NIL
 HORIZONTAL
-
-PLOT
-705
-230
-970
-409
-Network Properties Rewire-One
-fraction of edges rewired
-NIL
-0.0
-1.0
-0.0
-1.0
-true
-false
-"" "if not rewire-one? [ stop ]"
-PENS
-"apl" 1.0 2 -65485 true "" "plotxy number-rewired / count links\n       average-path-length / average-path-length-of-lattice"
-"cc" 1.0 2 -10899396 true "" ";; note: dividing by initial value to normalize the plot\nplotxy number-rewired / count links\n       clustering-coefficient / clustering-coefficient-of-lattice"
-
-BUTTON
-705
-195
-970
-228
-NIL
-rewire-one
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-975
-415
-1250
-448
-rewiring-probability
-rewiring-probability
-0
-1
-0.1
-0.01
-1
-NIL
-HORIZONTAL
-
-BUTTON
-975
-195
-1250
-228
-NIL
-rewire-all
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 MONITOR
 15
@@ -549,25 +562,6 @@ average-path-length
 3
 1
 11
-
-PLOT
-975
-230
-1250
-409
-Network Properties Rewire-All
-rewiring probability
-NIL
-0.0
-1.0
-0.0
-1.0
-true
-false
-"" "if not rewire-all? [ stop ]"
-PENS
-"apl" 1.0 2 -2674135 true "" ";; note: dividing by value at initial value to normalize the plot\nplotxy rewiring-probability\n       average-path-length / average-path-length-of-lattice"
-"cc" 1.0 2 -10899396 true "" ";; note: dividing by initial value to normalize the plot\nplotxy rewiring-probability\n       clustering-coefficient / clustering-coefficient-of-lattice"
 
 BUTTON
 10
@@ -680,6 +674,43 @@ sync_silence_time
 1
 NIL
 HORIZONTAL
+
+PLOT
+10
+480
+820
+695
+Flashing-nodes
+t
+#
+0.0
+1000.0
+0.0
+80.0
+true
+true
+"set-plot-y-range 0 num-nodes" ""
+PENS
+"# flashing-nodes" 1.0 0 -16382462 true "" "plot count turtles with [color = yellow]"
+"sync?" 1.0 0 -2674135 true "" "plot sync * (num-nodes / 2)"
+
+PLOT
+835
+460
+1610
+805
+cycle_lengths
+NIL
+NIL
+0.0
+10.0
+80.0
+115.0
+true
+true
+"" "if ticks > 0 [ask turtle 0[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 1\n     plotxy ticks cycle_length\n]\nask turtle 1[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 0.8\n     plotxy ticks cycle_length\n]\nask turtle 2[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 0.6\n     plotxy ticks cycle_length\n]\nask turtle 3[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 0.4\n     plotxy ticks cycle_length\n]\nask turtle 4[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 0.2\n     plotxy ticks cycle_length\n]\nask turtle 5[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green\n     plotxy ticks cycle_length\n]\nask turtle 6[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 0.2\n     plotxy ticks cycle_length\n]\nask turtle 7[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 0.4\n     plotxy ticks cycle_length\n]\nask turtle 8[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 0.6\n     plotxy ticks cycle_length\n]\nask turtle 9[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 0.8\n     plotxy ticks cycle_length\n]\nask turtle 10[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1\n     plotxy ticks cycle_length\n]\nask turtle 11[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1.2\n     plotxy ticks cycle_length\n]\nask turtle 12[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1.4\n     plotxy ticks cycle_length\n]\nask turtle 13[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1.6\n     plotxy ticks cycle_length\n]\nask turtle 14[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1.8\n     plotxy ticks cycle_length\n]\n  ]"
+PENS
+"mean" 1.0 0 -2674135 true "" "if ticks > 0 [ plot mean [cycle_length] of turtles ]"
 
 @#$#@#$#@
 ## WHAT IS IT?
