@@ -19,6 +19,7 @@ globals [
   silence_time                         ; time of silence elapsed (of nobody flashing)
                                        ; default necessary silence in the paper for sync is 200ms
   sync                                ; boolean value to tell if the network is synchronized
+  sync-tick                           ; number of tick when the network has synchronized
 ]
 
 turtles-own [
@@ -52,7 +53,7 @@ to setup
   set upper_bound 115
 
   ; make the nodes and arrange them in a circle in order by who number
-  set-default-shape turtles "circle"
+  set-default-shape turtles "butterfly"
   create-turtles num-nodes [
     set color blue - 1
     set flash_length 2
@@ -61,6 +62,7 @@ to setup
     set nat_cycle_length lower_bound + (random (upper_bound - lower_bound))
     set cycle_length nat_cycle_length
     set phase random (round cycle_length)
+    set size 1.5
   ]
   layout-circle (sort turtles) max-pxcor - 1
 
@@ -143,7 +145,10 @@ to check_sync
     ]
     [
       ifelse silence_time > sync_silence_time [
-        set sync 1
+        if sync = 0 [
+          set sync 1
+          set sync-tick ticks
+        ]
       ]
       [
         set silence_time 0
@@ -399,6 +404,7 @@ to wire-small-world
 
     ; if the apl is infinity, it means our new network is not connected. Reset the lattice.
     ifelse find-average-path-length = infinity [ set connected? false ] [ set connected? true ]
+    ;ifelse (find-clustering-coefficient > 0.4 and find-average-path-length < 3.2) [set connected? true] [set connected? false]
     ifelse (find-clustering-coefficient > 0.2 and find-clustering-coefficient < 0.3) [set connected? true] [set connected? false]
   ]
 
@@ -538,7 +544,7 @@ num-nodes
 num-nodes
 10
 100
-37.0
+80.0
 1
 1
 NIL
@@ -695,6 +701,17 @@ true
 PENS
 "mean" 1.0 0 -2674135 true "" "if ticks > 0 [ plot mean [cycle_length] of turtles ]"
 
+MONITOR
+790
+20
+852
+65
+NIL
+sync-tick
+17
+1
+11
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -818,6 +835,27 @@ arrow
 true
 0
 Polygon -7500403 true true 150 0 0 150 105 150 105 293 195 293 195 150 300 150
+
+bee 2
+true
+0
+Polygon -1184463 true false 195 150 105 150 90 165 90 225 105 270 135 300 165 300 195 270 210 225 210 165 195 150
+Rectangle -16777216 true false 90 165 212 185
+Polygon -16777216 true false 90 207 90 226 210 226 210 207
+Polygon -16777216 true false 103 266 198 266 203 246 96 246
+Polygon -6459832 true false 120 150 105 135 105 75 120 60 180 60 195 75 195 135 180 150
+Polygon -6459832 true false 150 15 120 30 120 60 180 60 180 30
+Circle -16777216 true false 105 30 30
+Circle -16777216 true false 165 30 30
+Polygon -7500403 true true 120 90 75 105 15 90 30 75 120 75
+Polygon -16777216 false false 120 75 30 75 15 90 75 105 120 90
+Polygon -7500403 true true 180 75 180 90 225 105 285 90 270 75
+Polygon -16777216 false false 180 75 270 75 285 90 225 105 180 90
+Polygon -7500403 true true 180 75 180 90 195 105 240 195 270 210 285 210 285 150 255 105
+Polygon -16777216 false false 180 75 255 105 285 150 285 210 270 210 240 195 195 105 180 90
+Polygon -7500403 true true 120 75 45 105 15 150 15 210 30 210 60 195 105 105 120 90
+Polygon -16777216 false false 120 75 45 105 15 150 15 210 30 210 60 195 105 105 120 90
+Polygon -16777216 true false 135 300 165 300 180 285 120 285
 
 box
 false
