@@ -20,6 +20,7 @@ globals [
                                        ; default necessary silence in the paper for sync is 200ms
   sync                                ; boolean value to tell if the network is synchronized
   sync-tick                           ; number of tick when the network has synchronized
+  neighbors_to_flash
 ]
 
 turtles-own [
@@ -51,6 +52,8 @@ to setup
 
   set lower_bound 85
   set upper_bound 115
+
+  set neighbors_to_flash 1
 
   ; make the nodes and arrange them in a circle in order by who number
   set-default-shape turtles "butterfly"
@@ -544,7 +547,7 @@ num-nodes
 num-nodes
 10
 100
-80.0
+40.0
 1
 1
 NIL
@@ -589,21 +592,6 @@ NIL
 NIL
 1
 
-SLIDER
-10
-110
-182
-143
-neighbors_to_flash
-neighbors_to_flash
-1
-10
-1.0
-1
-1
-NIL
-HORIZONTAL
-
 BUTTON
 10
 165
@@ -639,10 +627,10 @@ NIL
 1
 
 MONITOR
-705
-20
-762
-65
+690
+10
+747
+55
 NIL
 sync
 17
@@ -666,9 +654,9 @@ HORIZONTAL
 
 PLOT
 690
-390
-1420
-605
+270
+1255
+465
 Flashing-nodes
 t
 #
@@ -685,9 +673,9 @@ PENS
 
 PLOT
 690
-85
-1420
-380
+60
+1255
+270
 cycle_lengths
 NIL
 NIL
@@ -699,13 +687,14 @@ true
 true
 "" "if ticks > 0 [ask turtle 0[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 1\n     plotxy ticks cycle_length\n]\nask turtle 1[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 0.8\n     plotxy ticks cycle_length\n]\nask turtle 2[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 0.6\n     plotxy ticks cycle_length\n]\nask turtle 3[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 0.4\n     plotxy ticks cycle_length\n]\nask turtle 4[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green - 0.2\n     plotxy ticks cycle_length\n]\nask turtle 5[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green\n     plotxy ticks cycle_length\n]\nask turtle 6[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 0.2\n     plotxy ticks cycle_length\n]\nask turtle 7[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 0.4\n     plotxy ticks cycle_length\n]\nask turtle 8[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 0.6\n     plotxy ticks cycle_length\n]\nask turtle 9[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 0.8\n     plotxy ticks cycle_length\n]\nask turtle 10[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1\n     plotxy ticks cycle_length\n]\nask turtle 11[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1.2\n     plotxy ticks cycle_length\n]\nask turtle 12[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1.4\n     plotxy ticks cycle_length\n]\nask turtle 13[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1.6\n     plotxy ticks cycle_length\n]\nask turtle 14[\n     create-temporary-plot-pen (word who)\n     set-plot-pen-color green + 1.8\n     plotxy ticks cycle_length\n]\n  ]"
 PENS
-"mean" 1.0 0 -2674135 true "" "if ticks > 0 [ plot mean [cycle_length] of turtles ]"
+"mean" 1.0 0 -2674135 true "" "if sync = 0 [if ticks > 0 [ plot mean [cycle_length] of turtles ]]"
+"sync" 1.0 0 -13345367 true "" "ifelse sync = 1 [if ticks > 0 [ plot 90 ]] [if ticks > 0 [ plot 80 ]]"
 
 MONITOR
-790
-20
-852
-65
+750
+10
+812
+55
 NIL
 sync-tick
 17
