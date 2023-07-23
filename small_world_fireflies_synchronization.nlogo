@@ -142,7 +142,7 @@ to update_color
 end
 
 to check_sync
-  if ticks > 300 [
+  if ticks > 150 [
     ifelse count turtles with [color = yellow or color = green - 0.5] = 0 [
       set silence_time silence_time + 1
     ]
@@ -547,7 +547,7 @@ num-nodes
 num-nodes
 10
 100
-40.0
+36.0
 1
 1
 NIL
